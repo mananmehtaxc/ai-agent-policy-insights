@@ -24,6 +24,33 @@ Designed for privacy policies, terms of service, disclaimers, cookie policies, a
 12. Data Protection Policy
 13. Legal Notice / Imprint
 
+## Detailed list 
+
+| Category           | Document Type                           | Description                                           |
+| ------------------ | --------------------------------------- | ----------------------------------------------------- |
+| 📃 Agreements      | Service-Level Agreement (SLA)           | Outlines service standards, uptime, support, etc.     |
+|                    | Master Service Agreement (MSA)          | Governs long-term vendor-client relationships         |
+|                    | Licensing Agreement                     | Legal use of software or content                      |
+|                    | Non-Disclosure Agreement (NDA)          | Protects confidential information                     |
+| ⚖️ Compliance      | GDPR Policy                             | European privacy regulation                           |
+|                    | CCPA Statement                          | California Consumer Privacy Act                       |
+|                    | HIPAA Policy                            | U.S. health data compliance                           |
+|                    | DMCA Policy                             | Copyright takedown rules                              |
+|                    | FERPA Policy                            | Educational data privacy in U.S.                      |
+|                    | COPPA Notice                            | Privacy notice for children’s websites                |
+| 📦 Commerce        | Shipping Policy                         | Shipping timelines and methods                        |
+|                    | Payment Policy                          | Payment terms, supported methods                      |
+|                    | Billing Terms                           | Recurring billing, invoicing rules                    |
+|                    | Cancellation Policy                     | How users can cancel subscriptions                    |
+|                    | Warranty Policy                         | Coverage and limits of product warranties             |
+| 👤 User Rights     | User Data Request Procedure             | How users request, edit, or delete data               |
+|                    | Account Deletion Policy                 | Steps to permanently delete user accounts             |
+|                    | Moderation or Abuse Policy              | What content/behavior is prohibited                   |
+| 🛠️ Operational    | Maintenance Notice / SLA Schedule       | Scheduled downtimes and update cycles                 |
+|                    | Incident Response Policy                | How site responds to data breaches or security issues |
+| 🌍 Region-specific | Terms localized for EU, UK, India, etc. | Tailored terms depending on legal region              |
+
+
 ---
 
 ## ⚙️ Tech Stack
@@ -118,14 +145,15 @@ pip freeze > requirements.txt
 ## 📁 Folder Structure
 
 ```
-legalmind-agent/
+ai-agent-legal-doc-assistant/
 ├── app.py                  # Streamlit UI
 ├── agents/
 │   ├── summarize_agent.py  # Summarization logic
 │   └── qa_agent.py         # Q&A logic
-├── loaders/
-│   ├── url_scraper.py      # URL-based scraper
-│   └── file_loader.py      # PDF/DOCX parser
+├── scapper/
+│   ├── discover_legal_links.py      # Given a main site URL, finds legal page URLs
+│   ├── scrape_legal_text.py      # Given a specific legal page URL, extracts the text content
+│   └── file_loader.py          # PDF/DOCX parser
 ├── prompts/
 │   ├── summarize_prompt.txt
 │   └── qa_prompt.txt
@@ -162,9 +190,9 @@ Question:
 
 ---
 
-## 🔍 Recommended Legal LLMs for Clear Q\&A
+## 🔍 Legal LLMs for Clear Q\&A You could any of below
 
-### 1. `lexi-lawyer/lexi-7b`
+### 1. `lexi-lawyer/lexi-7b` (used here open sources from)
 
 * Trained on legal policies, contracts, and GDPR
 * Great at explaining legal text in plain English
@@ -173,13 +201,21 @@ Question:
 
 * Strong legal foundation, best used with structured prompts
 
-### 3. `mistralai/Mistral-7B-Instruct`
+### 3. `mistralai/Mistral-7B-Instruct` (open source)
 
 * General-purpose LLM, performs well with legal prompts + RAG
 
 ### 4. `Anthropic Claude 3`
 
 * Hosted only; excels at nuanced reasoning and long-doc comprehension
+
+| Model                   | Best For               | Plain English | Deployable     | Open Source? |
+| ----------------------- | ---------------------- | ------------- | -------------- | ------------ |
+| **Lexi-7B**             | Legal docs & contracts | ✅             | ✅ Hugging Face | ✅            |
+| **LawGPT-7B**           | Structured legal work  | ⚠️ Medium     | ✅ HF           | ✅            |
+| **Mistral-7B-Instruct** | General + legal RAG    | ✅             | ✅              | ✅            |
+| **Claude 3**            | Long form & reasoning  | ✅✅            | LangChain API  | ❌            |
+
 
 ---
 
