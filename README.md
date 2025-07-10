@@ -145,7 +145,7 @@ pip freeze > requirements.txt
 ## 📁 Folder Structure
 
 ```
-ai-agent-legal-doc-assistant/
+ai-agent-policy-insights/
 ├── app.py                  # Streamlit UI
 ├── agents/
 │   ├── summarize_agent.py  # Summarization logic
@@ -170,7 +170,7 @@ ai-agent-legal-doc-assistant/
 ### Summarization Prompt
 
 ```
-You are a legal assistant. Read the following legal document and generate a structured summary with key sections, legal obligations, user rights, and limitations.
+You are a policy analyzer assistant. Read the following policy and disclaimer document and generate a structured summary with key sections, legal obligations, user rights, and limitations.
 
 Document:
 {document_text}
@@ -179,7 +179,7 @@ Document:
 ### Question Answering Prompt
 
 ```
-Use the following legal document context to answer the user's question accurately. Answer only based on the provided context.
+Use the following policy document context to answer the user's question accurately. Answer only based on the provided context.
 
 Context:
 {context}
@@ -192,26 +192,20 @@ Question:
 
 ## 🔍 Legal LLMs for Clear Q\&A You could any of below
 
-### 1. `lexi-lawyer/lexi-7b` (used here open sources from)
-
-* Trained on legal policies, contracts, and GDPR
-* Great at explaining legal text in plain English
-
-### 2. `OpenLegal/LawGPT-7B`
+### 1. `OpenLegal/LawGPT-7B`
 
 * Strong legal foundation, best used with structured prompts
 
-### 3. `mistralai/Mistral-7B-Instruct` (open source)
+### 2. `mistralai/Mistral-7B-Instruct` (open source)
 
 * General-purpose LLM, performs well with legal prompts + RAG
 
-### 4. `Anthropic Claude 3`
+### 3. `Anthropic Claude 3`
 
 * Hosted only; excels at nuanced reasoning and long-doc comprehension
 
 | Model                   | Best For               | Plain English | Deployable     | Open Source? |
 | ----------------------- | ---------------------- | ------------- | -------------- | ------------ |
-| **Lexi-7B**             | Legal docs & contracts | ✅             | ✅ Hugging Face | ✅            |
 | **LawGPT-7B**           | Structured legal work  | ⚠️ Medium     | ✅ HF           | ✅            |
 | **Mistral-7B-Instruct** | General + legal RAG    | ✅             | ✅              | ✅            |
 | **Claude 3**            | Long form & reasoning  | ✅✅            | LangChain API  | ❌            |
