@@ -2,6 +2,7 @@ from langchain.llms import huggingface_hub
 from langchain_core.prompts import PromptTemplate   
 from langchain.chains import LLMChain
 
+
 #load prompt template from prompt/summarize_prompt.txt
 with open('prompt/summarize_prompt.txt', 'r') as file:
     summarize_prompt = file.read()
@@ -12,9 +13,10 @@ prompt_template = PromptTemplate(
     template=summarize_prompt
 )
 
+repo_id = "mistralai/Mistral-7B-Instruct-v0.3"  # Updated to a more recent model
 # Initialize the LLM with the Hugging Face model
 llm = huggingface_hub.HuggingFaceHub(
-    repo_id="mistralai/Mistral-7B-Instruct",
+    repo_id=repo_id,
     model_kwargs={"temperature": 0.1, "max_new_tokens": 2048}
 )
 # Initialize the LLMChain with the prompt template and LLM
