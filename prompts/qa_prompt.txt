@@ -8,10 +8,10 @@ Provide clear, concise, and easy-to-understand answers suitable for a general au
 
 ---
 
-Context:
-{context}
+Summary of the policy:{summary}
+Context from document:{context}
 
 ---
 
-Question:
+Answer the following question:
 {question}

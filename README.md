@@ -53,14 +53,24 @@ Designed for privacy policies, terms of service, disclaimers, cookie policies, a
 
 ---
 
+Here's your updated **README `Tech Stack` section**, reflecting the shift from Hugging Face to Google Gemini via `langchain_google_genai`:
+
+---
+
 ## ⚙️ Tech Stack
 
-* **LangChain**: Orchestrates agent, tools, and memory
-* **Hugging Face Transformers**: Local or hosted LLMs for summarization and Q\&A
-* **BeautifulSoup**: For HTML content extraction from URLs
-* **PyMuPDF / python-docx / pdfplumber**: For parsing uploaded DOCX/PDF files
-* **Streamlit**: Chat UI for interaction
-* **FAISS or Chroma**: (Optional) for advanced document chunking & semantic search
+* **LangChain**: Framework for chaining LLMs, agents, and tools
+* **Google Gemini via `langchain_google_genai`**: Used for both summarization and Q\&A 
+* **BeautifulSoup**: For extracting legal/policy content from web pages
+* **PyMuPDF / python-docx / pdfplumber**: For parsing uploaded PDF and DOCX documents
+* **Streamlit**: Web interface for URL input, policy summarization, and Q\&A chat
+* **FAISS**: Vector store for semantic document chunking and retrieval (used in RAG-style Q\&A)
+* **dotenv**: Secure handling of API keys and environment variables
+
+---
+
+Let me know if you also want to include a diagram, setup instructions, or feature overview in the README.
+
 
 ---
 
@@ -80,10 +90,10 @@ Designed for privacy policies, terms of service, disclaimers, cookie policies, a
 * Generates detailed, structured summaries with key clauses
 * Uses prompt engineering for clarity, compliance relevance, and structure
 
-### 3. Question Answering Agent
+### 3. Question Answering Agent (not working)
 
 * Uses retrieved document chunks and context to answer user queries
-* Powered by a Hugging Face LLM (e.g., Mistral, Falcon, T5) or Open Source-compatible model
+* Powered by Google Gemini
 * Optionally integrates LangChain's `RetrievalQA` or custom prompt chaining
 
 ### 4. Chat Interface
@@ -190,29 +200,6 @@ Question:
 
 ---
 
-## 🔍 Legal LLMs for Clear Q\&A You could any of below
-
-### 1. `OpenLegal/LawGPT-7B`
-
-* Strong legal foundation, best used with structured prompts
-
-### 2. `mistralai/Mistral-7B-Instruct` (open source)
-
-* General-purpose LLM, performs well with legal prompts + RAG
-
-### 3. `Anthropic Claude 3`
-
-* Hosted only; excels at nuanced reasoning and long-doc comprehension
-
-| Model                   | Best For               | Plain English | Deployable     | Open Source? |
-| ----------------------- | ---------------------- | ------------- | -------------- | ------------ |
-| **LawGPT-7B**           | Structured legal work  | ⚠️ Medium     | ✅ HF           | ✅            |
-| **Mistral-7B-Instruct** | General + legal RAG    | ✅             | ✅              | ✅            |
-| **Claude 3**            | Long form & reasoning  | ✅✅            | LangChain API  | ❌            |
-
-
----
-
 ## 🔧 Suggested RAG Setup
 
 | Component | Tool                                   |
@@ -238,10 +225,7 @@ Question:
 ## 📌 Future Enhancements
 
 * Add support for multilingual documents
-* Integrate OpenAI, Claude, or Gemini models via LangChain
-* Auto-detect legal page from main website URL
 * Summarization toggle (brief vs detailed)
-* Headless browser support for dynamic legal content
 
 ---
 
@@ -253,8 +237,10 @@ This AI tool is for informational purposes only and does not provide legal advic
 
 ## 👥 Contributors
 
-* Manan Mehta — AI Agent Architect
+* Manan Mehta
 * \[Your Team or Contributors Here]
 
 ---
 
+# Test website: https://1path.com
+# Test website: https://www.apple.com

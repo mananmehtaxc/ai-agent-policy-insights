@@ -1,82 +1,106 @@
-from langchain.embeddings import HuggingFaceEmbeddings
-from langchain.llms import huggingface_hub
-from langchain.vectorstores import FAISS
+# agents/qa_agent.py
+from langchain_google_genai import GoogleGenerativeAIEmbeddings, GoogleGenerativeAI
+from langchain_community.vectorstores import FAISS
 from langchain.chains import RetrievalQA
-from langchain_core.prompts import PromptTemplate
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.document_loaders import TextLoader
+from langchain.schema import Document
+from langchain_core.prompts import PromptTemplate
+from langchain_core.runnables import RunnableSequence
+from langchain_core.output_parsers import StrOutputParser
+from dotenv import load_dotenv
+import os
+
+import asyncio
 
 
-# Load prompt template from prompt/qa_prompt.txt
-with open('prompts/qa_prompt.txt', 'r') as file:
-    qa_prompt = file.read() 
+# Load environment variables
+load_dotenv()
 
-# Initialize the prompt template
-qa_prompt_template = PromptTemplate(
-    input_variables=["context", "question"],
-    template=qa_prompt
-)   
-# st.write("Prompt Template Loaded Successfully")
-# st.write("Prompt Template:", qa_prompt_template.template)
-# st.write("Input Variables:", qa_prompt_template.input_variables)
+google_api_key = os.getenv("GOOGLE_API_KEY")
 
-# Initialize the LLM with the Hugging Face model
-repo_id = "mistralai/Mistral-7B-Instruct-v0.3"  # Updated to a more recent model
-llm = huggingface_hub.HuggingFaceHub(
-    repo_id=repo_id,
-    model_kwargs={"temperature": 0.1, "max_new_tokens": 2048}
+# Load summarization prompt from file
+with open("prompts/qa_prompt.txt", "r") as f:
+    template = f.read()
+
+
+def get_embeddings():
+# Initialize embedding and language model
+    return GoogleGenerativeAIEmbeddings(model="models/embedding-001", google_api_key=google_api_key)
+    """Returns the Google Generative AI embeddings instance."""
+
+# Event loop runner that works inside Streamlit
+def run_async(coro):
+    try:
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+    if loop.is_running():
+        # If inside Streamlit or Jupyter
+        return asyncio.run(coro)
+    return loop.run_until_complete(coro)
+
+llm = GoogleGenerativeAI(
+    model="gemini-2.5-flash",
+    google_api_key=google_api_key,
+    temperature=0.2,
+    top_p=1.0,
+    top_k=40,
+    max_output_tokens=2048
 )
 
-# Initialize the embeddings
-embeddings = HuggingFaceEmbeddings(
-    model_name="sentence-transformers/all-MiniLM-L6-v2"
-)
-
-# Split document into chunks
+# Create a text splitter for long content
 text_splitter = RecursiveCharacterTextSplitter(
-    chunk_size=1000, chunk_overlap=200
+    chunk_size=1000,
+    chunk_overlap=200,
+    separators=["\n\n", "\n", " ", ""]
 )
-# st.write("Text Splitter Type:", type(text_splitter))
-
-# Build FAISS vector store from text chunks
-faiss_vector_store = FAISS.from_texts( chunks=[], 
-    embedding=embeddings,
-)
-
-# Initialize the RetrievalQA chain with the prompt template, LLM, and vector store
-qa_chain = RetrievalQA.from_chain_type(
-    llm=llm,
-    chain_type="stuff",
-    retriever=faiss_vector_store.as_retriever(),
-    return_source_documents=True,
-    chain_type_kwargs={"prompt": qa_prompt_template},
-    verbose=True
+# Then create PromptTemplate
+prompt_template = PromptTemplate(
+    input_variables=["context", "question", "summary"],
+    template=template,
 )
 
-def answer_question(document_text: str, question: str) -> str:
-    """
-    Answer a question based on the provided document text using the RetrievalQA chain.
-    
-    :param document_text: The text of the document to be used for answering the question.
-    :param question: The question to be answered.
-    :return: The answer to the question along with source documents.
-    """
-    # Load and split the document text into chunks
-    documents = text_splitter.split_text(document_text)
-    # st.write("Number of chunks created:", len(documents))
-    
-    # Add chunks to the FAISS vector store
-    faiss_vector_store.add_texts(documents)
-    
-    # Run the RetrievalQA chain with the provided question
-    result = qa_chain.run(question=question)
-    # st.write("Result from RetrievalQA:", result)
+def build_vector_store(text: str):
+    docs = [Document(page_content=chunk) for chunk in text_splitter.split_text(text)]
+    embedding_result = get_embeddings()
 
-    # Return the answer and source documents
-    answer = result['result']
-    source_documents = result['source_documents']
+    async def async_build():
+        return FAISS.from_documents(docs, embedding_result)
 
-    # If no source documents are found, return an empty answer
-    if not source_documents:
-        return "", []       
-    return answer, source_documents
+
+def create_qa_chain(text, summary:str = None) -> RetrievalQA:
+    """Creates a QA chain with RAG using the vector store."""
+    # Split the text into chunks
+    # chunks = text_splitter.split_text(text)
+
+    # Create document from chunks
+    # documents = [Document(page_content=chunk) for chunk in chunks]
+
+    # Build the vector store
+    # vector_store = FAISS.from_documents(documents, embedding_result)
+
+    # If a summary is provided, include it in the context
+    if summary:
+        chain_type_kwargs = {"prompt": prompt_template.partial(summary=summary)}
+    
+    vector_store = run_async(build_vector_store(text))
+
+    # Create the RetrievalQA chain
+    retriever = vector_store.as_retriever(search_kwargs={"k": 5})
+
+    qa_chain = RetrievalQA.from_chain_type(
+        llm=llm,
+        retriever=retriever,
+        chain_type="stuff",
+        chain_type_kwargs=chain_type_kwargs,
+        return_source_documents=False
+    )
+    return qa_chain
+
+# Main function to answer questions based on full text (which is link/policy document)
+def answer_question(full_text: str, question: str, summary: str = None) -> str:
+    """Main interface for answering questions based on legal/policy text."""
+    qa_chain = create_qa_chain(full_text, summary=summary)
+    result = qa_chain.run({"question": question})
+    return result

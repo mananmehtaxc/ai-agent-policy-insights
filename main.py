@@ -1,11 +1,16 @@
 import os
-import streamlit as st
+from dotenv import load_dotenv
+import time
 from scrapper.discover_legal_links import fetch_legal_links
-from scrapper.scrape_legal_text import scrape_legal_text
+from scrapper.scrape_legal_text import scrape_legal_link
 from scrapper.file_loader import load_file
 from agents.qa_agent import answer_question
 from agents.summerize_agent import summarize_text
+import streamlit as st
 
+
+load_dotenv()
+google_api_key = os.getenv("GOOGLE_API_KEY")
 
 st.set_page_config(
     page_title="Policy Analyzer",
@@ -30,47 +35,95 @@ st.sidebar.markdown(
 
 # select options from below for analysis
 with st.sidebar:
-    choice = st.radio("Choose how tou like to provide policy information:", ["Use Website URL", "Use Policy URL", "File Upload"],
+    choice = st.radio("Choose how tou like to provide policy information:", ["Use Website URL", "File Upload"],
     captions=[
         "🌐 Analyze from Website URL (ie: https://www.example.com). Agent will parse avaiable links and present you to analyze",
-        "🔗 Analyze using URL of policy, disclamier, ToS Page etc. (ie. https://www.example.com/policy.html)",
         "📄 Analyze through Document.Upload a File to analyze"
         ],
     index = 0
     )
-    
+    if st.button("Reset Session"):
+        st.session_state.clear()
+        st.success("Session reset successfully. You can start fresh now.")
+        st.rerun()
+
+# Initialize session state variables
+if "legal_links" not in st.session_state:
+    st.session_state.legal_links = None
+if "legal_links_fetched" not in st.session_state:
+    st.session_state.legal_links_fetched = False
+if "summary" not in st.session_state:
+    st.session_state.summary = None
+if "scraped_text" not in st.session_state:
+    st.session_state.scraped_text = None
+if "analyze_link" not in st.session_state:
+    st.session_state.analyze_link = None
+if "file_content" not in st.session_state:
+    st.session_state.file_content = None
+
+# ---- Website URL Flow ----
 if choice == "Use Website URL":
-    st.write("### Enter Websitie URL (ie. ***www.example.com***)")
-    st.caption("Enter the URL of the website you want to analyze. The AI will scrape and summarize the policy for you.")
-    website_url = st.text_input("🌐 Enter Website URL",placeholder="www.example.com")
-if choice == "Use Policy URL":
-    st.write("### Enter Policy URL (ie. ***www.example.com/policy.html***)")
-    st.caption("Enter the URL of the policy document you want to analyze. The AI will summarize the policy and answer questions based on it.")
-    policy_url = st.text_input("🔗 Enter Policy URL",placeholder="www.example.com/policy.html")
+    st.write("### Enter Website URL")
+    st.caption("Enter the URL to analyze. The AI will find and summarize the legal/policy links.")
+    st.caption("URL format: https://www.example.com")
+    website_url = st.text_input("🌐 Enter Website URL", placeholder="www.example.com")
+
+    # Fetch legal links once
+    if website_url and not st.session_state.legal_links_fetched:
+        st.session_state.legal_links = fetch_legal_links(website_url)
+        st.session_state.legal_links_fetched = True
+
+    # Show fetched links
+    if st.session_state.legal_links and st.session_state.analyze_link is None:
+        with st.spinner("Fetching legal links...",show_time=True):
+            time.sleep(1)
+            st.write("### Legal Links Found:")
+            for link in st.session_state.legal_links:
+                left, right = st.columns([4, 1])
+                left.markdown(f"- [{link}]({link})")
+                if right.button("Analyze", key=link):
+                    st.session_state.analyze_link = link
+                    # st.rerun()
+
+    # Summarize and Q&A flow
+    if st.session_state.analyze_link:
+        link = st.session_state.analyze_link
+        st.info(f"Analyzing: {link}")
+
+        # Scrape and summarize only if not already done
+        if not st.session_state.scraped_text:
+            with st.spinner("Scraping and summarizing..."):
+                text = scrape_legal_link(link)
+                summary = summarize_text(text)
+                st.session_state.scraped_text = text
+                st.session_state.summary = summary
+
+        st.success("Summary complete")
+        st.write("### Summary")
+        st.write(st.session_state.summary)
+
+        # Q&A Chat
+        st.write("### Ask a Question")
+        question = st.chat_input("Ask a question about the policy")
+        if question:
+            with st.spinner("Generating answer..."):
+                answer = answer_question(
+                    st.session_state.scraped_text,
+                    question,
+                    summary=st.session_state.summary
+                )
+            st.write("### Answer")
+            st.write(answer)
+
+        # Back button
+        if st.button("🔙 Back"):
+            st.session_state.analyze_link = None
+            st.session_state.scraped_text = ""
+            st.session_state.summary = ""
+            st.rerun()
+
+# ---- File Upload (optional, not implemented yet) ----
 if choice == "File Upload":
     st.write("### Document Analysis")
-    st.caption("Upload a legal document or provide a URL to analyze its content. The AI will summarize the policy and answer questions based on it.")
-    document = st.file_uploader("📄 Upload File", type=["PDF", 'DOCX'])
-
-
-# Test website: https://1path.com
-# Test website: https://www.vccircle.com
-
-# Call discovery legal links for websiste_url
-'''
-if choice == "Use Website URL" and website_url:
-    st.info("Fetching legal links from the website...")
-    st.spinner("Checking Webiste...")
-    st.spinner("Fetching Links...")
-    legal_links = fetch_legal_links(website_url)
-    if legal_links:
-        st.spinner("Loading Links...")
-        st.success("Legal links found:")
-        for link in legal_links:
-            # Display index and link
-            st.write(f"{legal_links.index} - {link}")
-            st.button("Analyze", key=f"analyze_{legal_links.index}", on_click=lambda l=link: 
-                    st.session_state.update({"selected_link": l}))
-    else:
-        st.warning("No legal links found on the website.") 
-'''
+    st.caption("Upload a legal document to analyze its content.")
+    document = st.file_uploader("📄 Upload File", type=["PDF", "DOCX"])

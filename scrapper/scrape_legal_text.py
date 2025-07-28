@@ -1,7 +1,8 @@
 import requests
 from bs4 import BeautifulSoup
 
-def scrape_legal_text(url: str) -> str:
+# scrape single legal link (this is when user provides a specific policy link to analyze)
+def scrape_legal_link(url: str) -> str:
     headers = {
         "User-Agent": (
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "

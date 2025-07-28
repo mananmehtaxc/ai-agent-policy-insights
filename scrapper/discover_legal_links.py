@@ -29,12 +29,15 @@ def fetch_legal_links(base_url: str) -> list[str]:
         full_url = urljoin(base_url, href)
         parsed = urlparse(full_url)
 
-        if parsed.netloc != urlparse(base_url).netloc:
+        if parsed.netloc != urlparse(base_url).netloc: # Ignore external links
             continue
 
-        if is_valid_legal_link(href) or is_valid_legal_link(a.text):
+        # Check if link text contains legal keywords    
+        if is_valid_legal_link(href) or is_valid_legal_link(a.text): 
             found_links.add(full_url)
+        
 
+        
     return sorted(found_links)
 
 
