@@ -5,7 +5,7 @@ from scrapper.discover_legal_links import fetch_legal_links
 from scrapper.scrape_legal_text import scrape_legal_link
 from scrapper.file_loader import load_file
 from agents.qa_agent import answer_question
-from agents.summerize_agent import summarize_text
+from agents.summerize_agent import summarize_text, summarize_document
 import streamlit as st
 
 
@@ -18,7 +18,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
     )
 
-st.title("Policy Analyzer: AI Policy Analyst)")
+st.title("Policy Analyzer: AI Policy Analyst")
 st.caption(
     "Upload or provide URLs of Privacy Policies, Terms & Conditions, and other legal documents. "
     "Get clear summaries and ask questions in a chat-like interface powered by AI."
@@ -58,8 +58,7 @@ if "scraped_text" not in st.session_state:
     st.session_state.scraped_text = None
 if "analyze_link" not in st.session_state:
     st.session_state.analyze_link = None
-if "file_content" not in st.session_state:
-    st.session_state.file_content = None
+
 
 # ---- Website URL Flow ----
 if choice == "Use Website URL":
@@ -102,19 +101,6 @@ if choice == "Use Website URL":
         st.write("### Summary")
         st.write(st.session_state.summary)
 
-        # Q&A Chat
-        st.write("### Ask a Question")
-        question = st.chat_input("Ask a question about the policy")
-        if question:
-            with st.spinner("Generating answer..."):
-                answer = answer_question(
-                    st.session_state.scraped_text,
-                    question,
-                    summary=st.session_state.summary
-                )
-            st.write("### Answer")
-            st.write(answer)
-
         # Back button
         if st.button("🔙 Back"):
             st.session_state.analyze_link = None
@@ -126,4 +112,17 @@ if choice == "Use Website URL":
 if choice == "File Upload":
     st.write("### Document Analysis")
     st.caption("Upload a legal document to analyze its content.")
-    document = st.file_uploader("📄 Upload File", type=["PDF", "DOCX"])
+    document = st.file_uploader("📄 Upload File", type=["PDF", "txt"])
+    if document:
+        with st.spinner("Loading file...", show_time=True):
+            time.sleep(1)
+            try:
+                text = load_file(document)
+                st.session_state.scraped_text = text
+                st.spinner("Summarizing document...")
+                st.session_state.summary = summarize_document(text)
+                st.write("### Summary")
+                st.write(st.session_state.summary)
+                st.success("File loaded and summarized successfully.")
+            except Exception as e:
+                st.error(f"Error loading file: {e}")

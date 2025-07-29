@@ -238,9 +238,8 @@ This AI tool is for informational purposes only and does not provide legal advic
 ## 👥 Contributors
 
 * Manan Mehta
-* \[Your Team or Contributors Here]
 
 ---
 
-# Test website: https://1path.com
-# Test website: https://www.apple.com
+### Test website: https://1path.com
+### Test website: https://www.apple.com

@@ -4,33 +4,38 @@ from typing import Union
 import pdfplumber
 import docx
 
-def load_file(file_path: Union[str, Path]) -> str:
+def load_file(file_input: Union[str, Path, 'UploadedFile']) -> str:
     """
-    Load the content of a file given its path.
+    Load the content of a file given its path or UploadedFile object.
     
-    :param file_path: Path to the file to be loaded.
+    :param file_input: Path to the file or Streamlit UploadedFile.
     :return: Content of the file as a string.
     """
     try:
-        with open(file_path, 'r', encoding='utf-8') as file:
-            return file.read()
-        #check for file extension pdf or docx
-        ext = Path(file_path).suffix.lower()
-        if ext not in ['.pdf', '.docx']:
-            print(f"[File Loader] Unsupported file type: {ext}. Please use text files.")
-            raise ValueError(f"Unsupported file type: {ext}. Please use text files.")
+        # Determine file extension
+        if hasattr(file_input, "name"):  # It's a Streamlit UploadedFile
+            ext = Path(file_input.name).suffix.lower()
         else:
-            print(f"[File Loader] Successfully loaded file")
-            if ext == '.pdf':
-                with pdfplumber.open(file_path) as pdf:
-                    text = "" # Initialize an empty string to hold the text
-                    for page in pdf.pages: # Extract text from each page
-                        text += page.extract_text() + "\n" # Extract text from each page
-                    return text.strip() # Remove leading/trailing whitespace
-            elif ext == '.docx':
-                doc = docx.Document(file_path) # Load the docx file
-                text = "\n".join(paragraph.text for paragraph in doc.paragraphs) # Join paragraphs with newlines
-                return text.strip() # Remove leading/trailing whitespace
-    except FileNotFoundError:
-        print(f"[File Loader] File not found: {file_path}")
-        raise FileNotFoundError(f"File not found: {file_path}")
+            ext = Path(file_input).suffix.lower()
+
+        if ext == ".txt":
+            if hasattr(file_input, "read"):
+                return file_input.read().decode("utf-8")
+            else:
+                with open(file_input, 'r', encoding='utf-8') as file:
+                    print("File uploaded successfully.")
+                    return file.read()
+
+        elif ext == ".pdf":
+            with pdfplumber.open(file_input) as pdf:
+                return "\n".join(page.extract_text() for page in pdf.pages if page.extract_text())
+
+        elif ext == ".docx":
+            doc = docx.Document(file_input)
+            return "\n".join(paragraph.text for paragraph in doc.paragraphs)
+
+        else:
+            raise ValueError(f"Unsupported file type: {ext}")
+
+    except Exception as e:
+        raise RuntimeError(f"Error loading file: {e}")
